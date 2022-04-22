@@ -1,6 +1,10 @@
 package com.sena.gatewayservise.security.jwt;
 
+import com.sena.gatewayservise.security.UserPrincipal;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyFactory;
@@ -10,6 +14,8 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Date;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtProviderImp implements IJwtProvider {
@@ -27,7 +33,7 @@ public class JwtProviderImp implements IJwtProvider {
         try {
             return KeyFactory.getInstance("RSA");
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Unknown key generation algorithm", e);
+            throw new RuntimeException("Unknown key generation algorithm.", e);
         }
     }
 
@@ -44,10 +50,22 @@ public class JwtProviderImp implements IJwtProvider {
             jwtPublicKey = keyFactory.generatePublic(publicKeySpec);
 
         } catch (Exception e) {
-            throw new RuntimeException("Invalid key specification", e);
+            throw new RuntimeException("Invalid key specification.", e);
         }
     }
 
+    @Override
+    public String generateToken(UserPrincipal authentication) {
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining());
 
+        return Jwts.builder().setSubject(authentication.getUsername())
+                .claim("userId", authentication.getId())
+                .claim("roles", authorities)
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_IN_MS))
+                .signWith(jwtPrivateKey, SignatureAlgorithm.RS512)
+                .compact();
+    }
 
 }
