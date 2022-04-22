@@ -13,8 +13,4 @@ public class GatewayServiseApplication {
         SpringApplication.run(GatewayServiseApplication.class, args);
     }
 
-    @Bean
-    public PasswordEncoder encoder(){
-        return new BCryptPasswordEncoder();
-    }
 }
