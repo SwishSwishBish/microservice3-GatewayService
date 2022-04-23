@@ -1,0 +1,8 @@
+{
+  "name": "sena-microservice3-gateway",
+  "buildpacks": [
+    {
+      "url": "heroku/gradle"
+    }
+  ]
+}
