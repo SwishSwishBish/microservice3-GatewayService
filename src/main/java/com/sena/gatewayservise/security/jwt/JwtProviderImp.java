@@ -32,33 +32,31 @@ public class JwtProviderImp implements IJwtProvider {
     private Long JWT_EXPIRATION_IN_MS;
 
     private static final String JWT_TOKEN_PREFIX = "Bearer";
-    private static final String JWT_HEADER_STRING = "Authentication";
+    private static final String JWT_HEADER_STRING = "Authorization";
 
     private final PrivateKey jwtPrivateKey;
     private final PublicKey jwtPublicKey;
 
-    private KeyFactory getKeyFactory() {
-        try {
-            return KeyFactory.getInstance("RSA");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Unknown key generation algorithm.", e);
-        }
-    }
-
+    /*
+      First, we require public and private keys for RSA encryption and decryption.
+      Hence, below is the tool to generate RSA key online.
+      It generates RSA public key as well as the private key of size 512 bit, 1024 bit, 2048 bit,
+      3072 bit and 4096 bit with Base64 encoded.
+      By default, the private key is generated in PKCS#8 format and the public key is generated in X.509 format.
+     */
     public JwtProviderImp(@Value("${authentication.jwt.private-key}") String jwtPrivateKeyStr,
-                          @Value("${authentication.jwt.public-key}") String jwtPublicKeyStr) {
+                       @Value("${authentication.jwt.public-key}") String jwtPublicKeyStr) {
+        KeyFactory keyFactory = getKeyFactory();
 
         try {
-            KeyFactory keyFactory = getKeyFactory();
             Base64.Decoder decoder = Base64.getDecoder();
             PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(decoder.decode(jwtPrivateKeyStr.getBytes()));
             X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(decoder.decode(jwtPublicKeyStr.getBytes()));
 
             jwtPrivateKey = keyFactory.generatePrivate(privateKeySpec);
             jwtPublicKey = keyFactory.generatePublic(publicKeySpec);
-
         } catch (Exception e) {
-            throw new RuntimeException("Invalid key specification.", e);
+            throw new RuntimeException("Invalid key specification", e);
         }
     }
 
@@ -91,7 +89,7 @@ public class JwtProviderImp implements IJwtProvider {
         String username = claims.getSubject();
         Long userId = claims.get("userId", Long.class);
         List<GrantedAuthority> authorities = Arrays.stream(claims.get("roles").toString().split(","))
-                .map(role -> role.startsWith("ROLE") ? role : "ROLE" + role)
+                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
@@ -123,6 +121,14 @@ public class JwtProviderImp implements IJwtProvider {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private KeyFactory getKeyFactory() {
+        try {
+            return KeyFactory.getInstance("RSA");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unknown key generation algorithm", e);
+        }
     }
 
 }

@@ -19,7 +19,6 @@ public class UserPrincipal implements UserDetails {
     private String username;
     transient private String password;
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("USER"));

@@ -30,7 +30,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("sign-in")
-    public ResponseEntity<?> signIn(@RequestBody User user){
+    public ResponseEntity<?> signIn(@RequestBody User user) {
         return new ResponseEntity<>(authenticationService.signInAndReturnJWT(user), HttpStatus.OK);
     }
 }
